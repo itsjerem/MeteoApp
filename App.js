@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, FlatList, View, Text, StyleSheet } from "react-native";
 import { getLocation } from "./components/getLocation";
-import { getWeather } from "./components/getWeather";
+import { getWeather, getForecast } from "./components/getWeather";
 
 export default function App() {
   const [location, setLocation] = useState(null);
+  const [forecast, setForecast] = useState([]);
   const [weather, setWeather] = useState(null);
-  const [loadingMessage, setLoadingMessage] = useState(
-    "Récupération des données météorologiques"
-  );
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -30,7 +29,7 @@ export default function App() {
   useEffect(() => {
     const loadingInterval = setInterval(() => {
       setLoadingMessage((prevMessage) => {
-        if (prevMessage.endsWith("...")) {
+        if (prevMessage === "" || prevMessage.endsWith("...")) {
           return "Récupération des données météorologiques";
         } else {
           return prevMessage + ".";
@@ -43,28 +42,64 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const currentLocation = await getLocation();
+      setLocation(currentLocation);
+
+      if (currentLocation) {
+        const currentWeather = await getWeather(
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude
+        );
+        setWeather(currentWeather);
+
+        const weatherForecast = await getForecast(
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude
+        );
+        setForecast(weatherForecast);
+      }
+    })();
+  }, []);
+
   return (
     <View style={styles.container}>
       {weather ? (
         <>
           <Text style={styles.title}>Météo du jour:</Text>
           <View style={styles.weatherContainer}>
-            <Text style={styles.text}>
-              <Text style={styles.boldText}>Ville:</Text> {weather.name}
-            </Text>
-            <Text style={styles.text}>
-              <Text style={styles.boldText}>Température:</Text>{" "}
-              {weather.main.temp}°C
-            </Text>
-            <Text style={styles.text}>
-              <Text style={styles.boldText}>Description du temps:</Text>{" "}
+            <Text style={styles.cityText}>{weather.name}</Text>
+            <Text style={styles.tempText}>{weather.main.temp}°C</Text>
+            <Text style={styles.descText}>
               {weather.weather[0].description}
             </Text>
-            <Text style={styles.text}>
-              <Text style={styles.boldText}>Icon:</Text>{" "}
-              {weather.weather[0].icon}
+            <Text style={styles.iconText}>
+              {weather.weather[0].icon} (icon)
             </Text>
           </View>
+          <FlatList
+            horizontal
+            data={forecast}
+            keyExtractor={(item) => item.dt.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.forecastItem}>
+                <Text style={styles.dayText}>
+                  {new Date(item.dt * 1000).toLocaleDateString()}
+                </Text>
+                <Text style={styles.timeText}>
+                  {new Date(item.dt * 1000).toLocaleTimeString()}
+                </Text>
+                <Text style={styles.tempText}>{item.main.temp}°C</Text>
+                <Text style={styles.descText}>
+                  {item.weather[0].description}
+                </Text>
+                <Text style={styles.iconText}>
+                  {item.weather[0].icon} (icon)
+                </Text>
+              </View>
+            )}
+          />
         </>
       ) : (
         <Text style={styles.title}>{loadingMessage}</Text>
@@ -75,22 +110,57 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  weatherContainer: {
+    backgroundColor: "#f9f9f9",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  cityText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  forecastItem: {
+    maxHeight: 200,
+    backgroundColor: "#f9f9f9",
+    padding: 20,
+    marginRight: 10,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  dayText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  timeText: {
+    fontSize: 14,
+  },
+  tempText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginTop: 10,
+  },
+  descText: {
+    fontSize: 18,
+    marginTop: 10,
+  },
+  iconText: {
+    fontSize: 10,
+    color: "#666",
+    marginTop: 10,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
+    marginTop: Platform.OS === "ios" ? 50 : 0, // Ajoute une marge en haut si iphone
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-  },
-  weatherContainer: {
-    backgroundColor: "#f9f9f9",
-    padding: 20,
-    borderRadius: 10,
   },
   text: {
     fontSize: 18,
