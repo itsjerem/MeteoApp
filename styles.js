@@ -2,10 +2,14 @@ import { StyleSheet, Platform } from "react-native";
 
 const styles = StyleSheet.create({
   weatherContainer: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 10,
+    marginRight: 10,
+    maxHeight: 300,
+    minWidth: 250,
     alignItems: "center",
+    justifyContent: "center",
   },
   cityText: {
     fontSize: 18,
@@ -45,7 +49,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     marginTop: Platform.OS === "ios" ? 60 : 0, // Ajoute une marge en haut si iphone
@@ -70,8 +73,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   icon: {
-    width: 50,
-    height: 50,
+    width: 75,
+    height: 75,
+  },
+  body: {
+    backgroundColor: "#f0f8ff",
+    flex: 1,
   },
 });
 
