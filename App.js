@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Platform, FlatList, View, Text, StyleSheet } from "react-native";
-import { getLocation } from "./components/getLocation";
-import { getWeather, getForecast } from "./components/getWeather";
+import { getLocation } from "./api/getLocation";
+import { getWeather, getForecast } from "./api/getWeather";
+import ForecastItem from "./components/ForecastItem";
+import WeatherToday from "./components/TodayWeather";
+import styles from "./styles";
 
 export default function App() {
   const [location, setLocation] = useState(null);
@@ -68,37 +71,14 @@ export default function App() {
       {weather ? (
         <>
           <Text style={styles.title}>Météo du jour:</Text>
-          <View style={styles.weatherContainer}>
-            <Text style={styles.cityText}>{weather.name}</Text>
-            <Text style={styles.tempText}>{weather.main.temp}°C</Text>
-            <Text style={styles.descText}>
-              {weather.weather[0].description}
-            </Text>
-            <Text style={styles.iconText}>
-              {weather.weather[0].icon} (icon)
-            </Text>
-          </View>
+          <WeatherToday weather={weather} />
+          <Text style={styles.h2}>Prévisions:</Text>
           <FlatList
+            style={styles.forecastList}
             horizontal
             data={forecast}
             keyExtractor={(item) => item.dt.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.forecastItem}>
-                <Text style={styles.dayText}>
-                  {new Date(item.dt * 1000).toLocaleDateString()}
-                </Text>
-                <Text style={styles.timeText}>
-                  {new Date(item.dt * 1000).toLocaleTimeString()}
-                </Text>
-                <Text style={styles.tempText}>{item.main.temp}°C</Text>
-                <Text style={styles.descText}>
-                  {item.weather[0].description}
-                </Text>
-                <Text style={styles.iconText}>
-                  {item.weather[0].icon} (icon)
-                </Text>
-              </View>
-            )}
+            renderItem={({ item }) => <ForecastItem item={item} />}
           />
         </>
       ) : (
@@ -108,65 +88,3 @@ export default function App() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  weatherContainer: {
-    backgroundColor: "#f9f9f9",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  cityText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  forecastItem: {
-    maxHeight: 200,
-    backgroundColor: "#f9f9f9",
-    padding: 20,
-    marginRight: 10,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  dayText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  timeText: {
-    fontSize: 14,
-  },
-  tempText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  descText: {
-    fontSize: 18,
-    marginTop: 10,
-  },
-  iconText: {
-    fontSize: 10,
-    color: "#666",
-    marginTop: 10,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Platform.OS === "ios" ? 50 : 0, // Ajoute une marge en haut si iphone
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  text: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  boldText: {
-    fontWeight: "bold",
-  },
-});
